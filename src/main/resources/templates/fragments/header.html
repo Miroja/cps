@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <title>Carrier position system</title>
+    <!-- Bootstrap core CSS -->
+    <link th:href="@{~/css/bootstrap.min.css}" rel="stylesheet" />
+    <link th:href="@{~/css/jquery-ui.min.css}" rel="stylesheet" />
+    <link th:href="@{~/css/dashboard.css}" rel="stylesheet" />
+    <link th:href="@{~/css/login.css}" rel="stylesheet" />
+    <link th:href="@{~/css/bootstrap-datepicker.css}" rel="stylesheet" />
+    <link th:href="@{~/css/jquery.timepicker.min.css}" rel="stylesheet" />
+
+
+</head>
+<body>
+<header th:fragment="header">
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top navbar-bg-black">
+        <div class="container-fluid">
+
+            <a class="navbar-brand" href="#">
+                <img th:src="@{~/img/logo_psa.svg}" title="PSA Logo"/>
+            </a>
+            <button class="navbar-toggler d-lg-none" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- todo: fix the search bar -->
+            <!--<div class="collapse navbar-collapse" id="navbarsExampleDefault">-->
+                <!--<form class="form-inline mt-2 mt-md-0">-->
+                    <!--<input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search"/>-->
+                    <!--<button class="btn btn-search-outline my-2 my-sm-0" type="submit">Search</button>-->
+                <!--</form>-->
+            <!--</div>-->
+
+            <!-- todo: fix the location picker -->
+            <div class="form-group blu-margin">
+                <select class="form-control" id="dropTerminal">
+                    <option th:each="terminal : ${terminals}" th:value="${terminal.id}" th:text="${terminal.name}"></option>
+                </select>
+            </div>
+
+            <ul class="nav navbar-nav navbar-right ">
+                <li class="nav-item" id="trigger">
+                    <img th:src="@{~/img/controls.svg}" title="controls-icon"/>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+
+
+</header>
+</body>
+
+
+
+<script th:inline="javascript" type='text/javascript'>
+    /*<![CDATA[*/
+
+    var e = document.getElementById("dropTerminal");
+    var terminal;
+
+
+    e.onchange = function(){
+        var strUser = e.options[e.selectedIndex].text;
+        console.log(strUser);
+        getTerminal(strUser);
+    };
+
+    function getTerminal(strUser) {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.open("POST", "http://localhost:8091/terminal?terminalName=" + strUser, true);
+        xhttp.setRequestHeader("Content-type", "text/plain");
+        xhttp.send(strUser);
+
+        xhttp.onreadystatechange = function () {
+            if ((this.readyState == 4) && (this.status == 200)) {
+                terminal = xhttp.responseText;
+                 changeTerminal(terminal);
+            }
+        };
+    }
+
+    function changeTerminal(terminalLocation) {
+        terminalLocation = JSON.parse(terminalLocation);
+
+        var bounds = new Microsoft.Maps.LocationRect.fromLocations(new Microsoft.Maps.Location(terminalLocation.bound1Lat, terminalLocation.bound1Lon), new Microsoft.Maps.Location(terminalLocation.bound2Lat, terminalLocation.bound2Lon));
+
+        map.setView({
+            center: new Microsoft.Maps.Location(terminalLocation.latitude, terminalLocation.longitude),
+            zoom: 15,
+            minZoom:16,
+            bounds: bounds
+        });
+    }
+    /*]]>*/
+</script>
+
+</html>
+

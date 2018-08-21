@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<Carriers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="carriers.xsd">
+    <Carrier TransporterCode="STR-12" note="main driver: Bill"/>
+    <Carrier TransporterCode="STR-13" note="main driver: John, broken: window"/>
+    <Carrier TransporterCode="STR-01"/>
+    <Carrier TransporterCode="STR-02"/>
+    <Carrier TransporterCode="STR-03" note="needs oil check"/>
+    <Carrier TransporterCode="RJA-01" note="needs oil check"/>
+
+</Carriers>

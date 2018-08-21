@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+</head>
+<body>
+<div th:replace="fragments/header"></div>
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-sm-4 col-md-3 d-none d-sm-block bg-light sidebar">
+
+            <ul class="nav nav-pills flex-column">
+                <li>
+                    <h4 class="left">Carrier overview</h4>
+                </li>
+                <!--/*@thymesVar id="carriers" type="nl.ict.psa.cps.entities.Carrier"*/-->
+                <ol id="carrier-select">
+                    <li class="ui-widget-content" th:each="carrier : ${carriers}" th:attr="onclick='javascript:openDialog(\'' + ${carrier.transporterCode} + '\', \'' + ${carrier.latitude} + '\', \'' + ${carrier.longitude} + '\', \'' + ${carrier.note} + '\', \'' + ${carrier.fuel} + '\', \'' + ${carrier.temperature} + '\', \'' + ${carrier.transportContainers[0].containerName} + '\' , \'' + ${carrier.transportContainers[1].containerName} + '\', \'' + ${carrier.driver} + '\');'">
+                        <label th:text="${carrier.transporterCode}"> </label>
+                        <a class="tracking-button" th:attr="onclick='javascript:showLineHistory(\'' + ${carrier.id} + '\', true);'" href="#"><img th:src="@{~/img/track.svg}" title="track-icon"/> </a>
+                    </li>
+                </ol>
+            </ul>
+            <div class="row left" id="carrier-info" style="display: none;">
+                <h3>Carrier: <span id="transporter-code"></span></h3>
+
+                <div class="row location-info">
+                   <div class="left col-sm-3 col-md-2">
+                       <a class="navbar-brand" href="#">
+                           <img th:src="@{~/img/map-placeholder.svg}" title="gps-icon"/>
+                       </a>
+                   </div>
+
+                    <div class="left-3 col-sm-5 col-md-4 location-text">
+                        <div class="border-bottom"><strong>Lat</strong> <span class="small-font" id="lat"></span> </div>
+                        <div><strong>Lon</strong> <span class="small-font" id="long"></span> </div>
+                    </div>
+                </div>
+
+                <div class="row location-info">
+                    <div class="left col-sm-3 col-md-2">
+                        <a class="navbar-brand" href="#">
+                            <img th:src="@{~/img/gas-station.svg}" title="gps-icon"/>
+                        </a>
+                    </div>
+
+                    <div class="left-3 col-sm-5 col-md-4 fuel-text">
+                        <div ><span class="small-font" id="fuel"></span><strong> L</strong> </div>
+                        <progress id="fuel-progress" max = "100"></progress>
+                    </div>
+                </div>
+
+                <div class="row location-info">
+                    <div class="row">
+                        <div class="left col-sm-12">
+                            <a class="navbar-brand" href="#">
+                                <img th:src="@{~/img/tire.svg}" title="tire-icon"/>
+                            </a>
+                        </div>
+                    </div>
+
+
+                    <span class="bar-indicator"><strong>BAR</strong></span>
+                    <div class="row">
+                        <div class="col">
+                            <table class="table">
+                                <tr>
+                                    <th scope="col">1</th>
+                                    <th scope="col">2</th>
+                                    <th scope="col">3</th>
+                                    <th scope="col">4</th>
+                                    <th scope="col">5</th>
+                                    <th scope="col">6</th>
+                                    <th scope="col">7</th>
+                                    <th scope="col">8</th>
+                                </tr>
+                                <tr >
+                                    <td>2,3</td>
+                                    <td>4,3</td>
+                                    <td>2,2</td>
+                                    <td>2,2</td>
+                                    <td>2,2</td>
+                                    <td>2,2</td>
+                                    <td>2,2</td>
+                                    <td>2,2</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row location-info">
+                    <div class="left col-sm-3 col-md-2">
+                        <a class="navbar-brand" href="#">
+                            <img th:src="@{~/img/container.svg}" title="container-icon"/>
+                        </a>
+                    </div>
+
+                    <div class="left-3 col-sm-5 col-md-4 fuel-text">
+                        <div><strong> Container 1</strong><br/><span id="container1" class="small-font"></span></div>
+                    </div>
+                    <div class="col-sm-4 col-md-4 fuel-text">
+                        <div><strong> Container 2</strong><br/><span id="container2" class="small-font"></span></div>
+                    </div>
+                </div>
+
+                <div class="row location-info">
+                    <div class="left col-sm-3 col-md-2">
+                        <a class="navbar-brand" href="#">
+                            <img th:src="@{~/img/user.svg}" title="user-icon"/>
+                        </a>
+                    </div>
+
+                    <div class="left-3 col-sm-5 col-md-4 fuel-text">
+                        <div ><strong> Driver: </strong><br/><span class="small-font" id="driver"></span></div>
+                    </div>
+                </div>
+
+                <form>
+                    <div class="form-group">
+                        <label for="note">Notitie:</label>
+                        <textarea class="form-control" id="note" rows="2" cols="25"></textarea>
+                    </div>
+                    <p><button class="btn btn-primary">Opslaan</button> - <a href="#" onclick="javascript:closeDialog();">Close</a></p>
+                </form>
+            </div>
+        </nav>
+
+        <main role="main" class="col-sm-9 ml-sm-auto col-md-10 pt-3">
+            <div class="row">
+                <div id="map" style="max-width: 100vw; min-height: calc(100vh - 72px);"></div>
+            </div>
+        </main>
+
+        <div id="slider">
+            <div class="slider-menu">
+                <ol id="filter-select">
+                    <li id="heatmap-flip" class="ui-widget-content" th:attr="onclick='javascript:showHeatMap();'"> <label>Heat-Map</label>
+                    </li>
+
+                </ol>
+                <div id="heatmap-panel">
+                    <h4>Select time range</h4>
+                    <div id="datepairExample">
+                        <input id="datestart" type="text" class="date start" />
+                        <input id="timestart" type="text" class="time start" />
+                        <h3>To</h3>
+                        <input id="timeend" type="text" class="time end" />
+                        <input id="dateend" type="text" class="date end" />
+                    </div>
+                    <button class="btn btn-light" th:onclick="'updateHeatmap();'">Update HeatMap</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>
+    Date.prototype.minHours = function(h) {
+        this.setTime(this.getTime() - (h*60*60*1000));
+        return this;
+    };
+
+    window.onload = function() {
+        if (window.jQuery) {
+
+
+
+            // jQuery is loaded
+            $( "#carrier-select" ).selectable({
+                selected: function (event, ui) {
+                    if ($(ui.selected).hasClass('click-selected')) {
+                        $(ui.selected).removeClass('ui-selected click-selected');
+                        document.getElementById('carrier-info').style.display = "none";
+
+                    } else {
+                        $(ui.selected).addClass('click-selected');
+                        document.getElementById('carrier-info').style.display = "block";
+
+                    }
+                },
+                unselected: function (event, ui) {
+                    $(ui.unselected).removeClass('click-selected');
+                    document.getElementById('carrier-info').style.display = "none";
+                }
+            });
+
+            /********** filter  *************************/
+            $( "#filter-select" ).selectable({
+                selected: function (event, ui) {
+                    if ($(ui.selected).hasClass('click-selected')) {
+                        $(ui.selected).removeClass('ui-selected click-selected');
+
+                    } else {
+                        $(ui.selected).addClass('click-selected');
+
+                    }
+                },
+                unselected: function (event, ui) {
+                    $(ui.unselected).removeClass('click-selected');
+                }
+            });
+
+            $("#heatmap-flip").click(function(){
+                $("#heatmap-panel").slideToggle("slow");
+            });
+
+
+
+            // initialize input widgets first
+            $('#datepairExample .time').timepicker({
+                'showDuration': true,
+                'timeFormat': 'G:i'
+            });
+
+            $('#datepairExample .date').datepicker({
+                'format': 'yyyy-m-d',
+                'autoclose': true
+            });
+
+            var startTime = new Date();
+            startTime.minHours(1);
+
+            $('#timestart').timepicker('setTime', startTime);
+            $('#timeend').timepicker('setTime', new Date());
+            $("#datepairExample .date").datepicker('setDate', new Date());
+
+            // initialize datepair
+            $('#datepairExample').datepair();
+
+
+
+            /*** slider  **/
+            var slider = $('#slider').slideReveal({
+                trigger: $("#trigger"),
+                position: "right"
+            });
+
+
+            slider.slideReveal("toggle");
+
+        } else {
+            // jQuery is not loaded
+            alert("Doesn't Work");
+        }
+    };
+
+</script>
+<script th:inline="javascript" type='text/javascript'>
+/*<![CDATA[*/
+
+var map;
+var carriers;
+var heatMapData;
+var layer;
+var heatMap;
+
+getCarriers();
+
+
+function openDialog(transporter, lat, long, note,fuel,temperature,container1, container2,driver) {
+    document.getElementById("transporter-code").innerHTML = transporter;
+    document.getElementById("lat").innerHTML = lat;
+    document.getElementById("long").innerHTML = long;
+    document.getElementById("note").placeholder = note;
+    document.getElementById("fuel").innerHTML = fuel;
+    document.getElementById("fuel-progress").value = fuel;
+
+    if(container1){
+        document.getElementById("container1").innerHTML = container1;
+    }
+
+    if(container2){
+        document.getElementById("container2").innerHTML = container2;
+    }
+
+    document.getElementById("driver").innerHTML = driver;
+}
+
+function closeDialog() {
+     document.getElementById('carrier-info').style.display = "none";
+}
+
+
+function loadMapScenario() {
+    // init = locatie Antwerpen
+    var bounds = new Microsoft.Maps.LocationRect.fromLocations(new Microsoft.Maps.Location(51.34594702702519, 4.27818775177002), new Microsoft.Maps.Location(51.36205438310597, 4.2539405822753915));
+
+    map = new Microsoft.Maps.Map(document.getElementById('map'), {
+        center: new Microsoft.Maps.Location(51.353077, 4.268553),
+        zoom: 15,
+      //  minZoom:16,
+        bounds: bounds
+    });
+
+
+    layer = new Microsoft.Maps.Layer();
+    map.layers.insert(layer);
+
+    carriers = [[${carriers}]];
+    for (i in carriers) {
+        console.log(carriers[i]);
+        var carrierLocation = new Microsoft.Maps.Location(carriers[i].latitude, carriers[i].longitude);
+        var carrierPushpin = new Microsoft.Maps.Pushpin(carrierLocation,
+            { title: carriers[i].transporterCode,
+                color: 'green'  });
+
+        Microsoft.Maps.Events.addHandler(carrierPushpin, 'click', (function(carrier){
+            return function () {
+                openDialog(carrier.transporterCode, carrier.latitude, carrier.longitude, carrier.note, carrier.fuel, carrier.temperature, carrier.driver);
+            }
+        })(carriers[i]));
+
+        layer.add(carrierPushpin);
+    }
+
+    setInterval(function () {refreshPins(layer);}, 3000);
+
+    Microsoft.Maps.loadModule('Microsoft.Maps.DrawingTools', function () {
+        var tools = new Microsoft.Maps.DrawingTools(map);
+        tools.showDrawingManager(function (manager) {
+        });
+    });
+}
+
+function getCarriers() {
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.open("POST", "http://localhost:8091/api", true);
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.send("");
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            carriers = JSON.parse(xhttp.responseText);
+        }
+    };
+}
+
+function refreshPins(){
+    layer.clear();
+
+    getCarriers();
+    if(carriers) {
+    console.log(carriers);
+
+        for ( i in carriers) {
+            var carrierLocation = new Microsoft.Maps.Location(carriers[i].latitude, carriers[i].longitude);
+            var carrierPushpin = new Microsoft.Maps.Pushpin(carrierLocation, {
+                title: carriers[i].transporterCode,
+                color: 'green'
+            });
+
+            Microsoft.Maps.Events.addHandler(carrierPushpin, 'click', (function(carrier){
+                return function () {
+                    openDialog(carrier.transporterCode, carrier.latitude, carrier.longitude, carrier.note, carrier.fuel, carrier.temperature, carrier.driver);
+                }
+            })(carriers[i]));
+
+            layer.add(carrierPushpin);
+
+            if(carriers[i].checkedRoutePointHistory === true){
+                showLineHistory(carriers[i].id,false);
+            }
+        }
+    }
+}
+
+function checkedShowHistory(carrierId, checkShowHistory){
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.open("POST", "http://localhost:8091/checkCarrierHistory?carrierId=" + carrierId+"&checkShowHistory=" + checkShowHistory, true);
+    xhttp.setRequestHeader("Content-type", "text/plain");
+    xhttp.send("");
+
+    xhttp.onreadystatechange = function () {
+        if ((this.readyState == 4) && (this.status == 200)) {
+            console.log("checkedShowHistory executed ");
+        }
+    };
+}
+
+function showLineHistory(id,userInput){
+
+console.log("showLineHistory function called ");
+    if(carriers){
+
+        for( var i in carriers) {
+
+            if((carriers[i]) && (carriers[i].id == id)){
+
+                if(userInput === true){
+                    checkedShowHistory(carriers[i].id, carriers[i].checkedRoutePointHistory);
+                }
+
+                var routePointHistory = carriers[i].carrierRoutePointsHistory;
+                var lineVertices = [];
+
+                if(routePointHistory){
+                    for (var j in routePointHistory) {
+
+                        var routePointLat = routePointHistory[j].latitude;
+                        var routePointLon = routePointHistory[j].longitude;
+
+                        lineVertices.push(new Microsoft.Maps.Location(routePointLat, routePointLon));
+                    }
+                }else{
+                    console.log("no routePointHistory ")
+                }
+                var line = new Microsoft.Maps.Polyline(lineVertices, {strokeColor: 'red', strokeThickness: 2});
+                layer.add(line);
+
+            }else{
+                console.log("no carrier ",i, " no match id", id);
+                if(carriers[i]){
+                    console.log("carriers[i].id ", carriers[i].id, "  id: ", id);
+                }
+            }
+        }
+    }else{
+        console.log("no carriers ");
+    }
+}
+
+function getHeatMapData() {
+    var xhttp = new XMLHttpRequest();
+
+    console.log("get datePair" , $("#timestart").val() ,  $("#timeend").val(), $("#datestart").val(),$("#dateend").val());
+    var timedatepair = {
+        timeStart: $("#timestart").val(),
+        timeEnd:  $("#timeend").val(),
+        dateStart:  $("#datestart").val(),
+        dateEnd: $("#dateend").val()
+    };
+
+    var jsonTimeDatePair = JSON.stringify(timedatepair);
+
+    xhttp.open("POST", "http://localhost:8091/heatmap", true);
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.send(jsonTimeDatePair);
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            heatMapData = JSON.parse(xhttp.responseText);
+            console.log("heatmapData",heatMapData);
+        }
+    };
+}
+
+var heatmapToggle = true;
+function showHeatMap(){
+
+    if(!heatmapToggle){
+        console.log("hide heatmap");
+
+        if(heatMap) {
+            heatMap.hide();
+        }
+
+        heatmapToggle = !heatmapToggle;
+    }
+    else{
+        console.log("show Heatmap");
+
+        updateHeatmap();
+
+        heatmapToggle = !heatmapToggle;
+    }
+}
+
+function updateHeatmap(){
+
+    if(carriers){
+
+        getHeatMapData();
+
+        if(heatMapData) {
+
+            clearHeatMap();
+
+            Microsoft.Maps.loadModule('Microsoft.Maps.HeatMap', function () {
+                /* locations can be the mix of Location and WeightedLocation */
+                var locations = [];
+
+                var heatMapRoutePoints = heatMapData.heatMapRoutePoints;
+
+                for (var i in heatMapRoutePoints) {
+                    var routePoint = heatMapRoutePoints[i];
+                    locations.push(new Microsoft.Maps.Location(routePoint.latitude, routePoint.longitude));
+                }
+
+                heatMap = new Microsoft.Maps.HeatMapLayer(locations);
+                map.layers.insert(heatMap);
+            });
+        }
+    }
+}
+
+function clearHeatMap() {
+    Microsoft.Maps.loadModule('Microsoft.Maps.HeatMap', function () {
+        /* locations can be the mix of Location and WeightedLocation */
+        heatMap.clear();
+    });
+
+}
+
+
+/*]]>*/
+
+</script>
+
+<script type='text/javascript'
+        th:src='@{https://www.bing.com/api/maps/mapcontrol(key=AvJj6__nAUoIlhIjaizam8pBJj9fiZmKH1ReCfVkbqUdWzHSPKqMDj8iZk85i6hZ,callback=loadMapScenario)}'
+        async="async" defer="defer"></script>
+
+<div th:replace="fragments/footer"></div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Login - CPS</title>
+</head>
+<body>
+<div th:replace="fragments/header" />
+<div class="container">
+    <div class="row">
+    <div class="jumbotron">
+            <div class="container">
+                <span class="glyphicon glyphicon-list-alt"></span>
+                <h2>PSA</h2>
+                <div class="box">
+                    <form th:action="@{/login}" method="post">
+                        <input type="text" name="username" placeholder="username"/>
+                        <input type="password" name="password" placeholder="password"/>
+                        <button class="btn btn-default full-width" type="submit">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
